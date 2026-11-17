@@ -2,11 +2,10 @@
   "name": "gradeledger",
   "version": "1.0.0",
   "description": "SGPA, CGPA & Percentage Calculator",
-  "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "keywords": ["cgpa", "sgpa", "calculator", "percentage"],
-  "author": "",
+  "author": "Nagendra M",
   "license": "MIT"
 }
