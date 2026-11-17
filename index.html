@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GradeLedger — SGPA · CGPA · Percentage Calculator</title>
+<meta name="description" content="Calculate SGPA, CGPA and percentage equivalents with a customizable grading scale and saved history — entirely in your browser." />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div class="paper-texture" aria-hidden="true"></div>
+
+<header class="app-header">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true">
+      <svg viewBox="0 0 40 40" width="34" height="34" fill="none">
+        <rect x="4" y="6" width="32" height="28" rx="2" fill="var(--ink-navy)"/>
+        <rect x="4" y="6" width="32" height="28" rx="2" stroke="var(--gold)" stroke-width="1.5"/>
+        <line x1="9" y1="14" x2="31" y2="14" stroke="var(--gold)" stroke-width="1.2"/>
+        <line x1="9" y1="20" x2="26" y2="20" stroke="var(--parchment)" stroke-width="1" opacity="0.6"/>
+        <line x1="9" y1="25" x2="26" y2="25" stroke="var(--parchment)" stroke-width="1" opacity="0.6"/>
+        <circle cx="29" cy="26" r="4" fill="var(--gold)"/>
+      </svg>
+    </span>
+    <div class="brand-text">
+      <h1>GradeLedger</h1>
+      <p>SGPA · CGPA · Percentage, tallied precisely</p>
+    </div>
+  </div>
+  <div class="header-actions">
+    <button id="studentAccountBtn" class="header-student-btn" aria-haspopup="dialog" title="Student Profile & Account">
+      <span class="student-avatar-mini" id="headerAvatar">?</span>
+      <div class="student-chip-info">
+        <span class="student-chip-name" id="headerStudentName">Student Login</span>
+        <span class="student-chip-usn" id="headerStudentUsn">VTU Account</span>
+      </div>
+    </button>
+    <button id="themeToggle" class="btn btn-ghost btn-icon" title="Toggle dark mode" aria-pressed="false">
+      <svg class="icon icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      <svg class="icon icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <span class="sr-only">Toggle dark mode</span>
+    </button>
+    <button id="helpToggle" class="btn btn-ghost btn-icon" aria-haspopup="dialog" aria-controls="helpDialog" title="How calculations work">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 2-3 4"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <span class="sr-only">How calculations work</span>
+    </button>
+  </div>
+</header>
+
+<section class="dashboard-strip" aria-label="Quick overview">
+  <div class="stat-chip">
+    <div class="stat-ring-mini">
+      <svg viewBox="0 0 64 64">
+        <circle class="ring-track" cx="32" cy="32" r="27"/>
+        <circle class="ring-progress" id="miniSgpaRing" cx="32" cy="32" r="27" stroke-dasharray="169.6" stroke-dashoffset="169.6"/>
+      </svg>
+      <span class="stat-ring-value" id="miniSgpaValue">—</span>
+    </div>
+    <div class="stat-chip-text">
+      <span class="stat-chip-label">Latest SGPA</span>
+      <span class="stat-chip-sub" id="miniSgpaSub">Not calculated yet</span>
+    </div>
+  </div>
+  <div class="stat-chip">
+    <div class="stat-ring-mini">
+      <svg viewBox="0 0 64 64">
+        <circle class="ring-track" cx="32" cy="32" r="27"/>
+        <circle class="ring-progress ring-progress-alt" id="miniCgpaRing" cx="32" cy="32" r="27" stroke-dasharray="169.6" stroke-dashoffset="169.6"/>
+      </svg>
+      <span class="stat-ring-value" id="miniCgpaValue">—</span>
+    </div>
+    <div class="stat-chip-text">
+      <span class="stat-chip-label">Latest CGPA</span>
+      <span class="stat-chip-sub" id="miniCgpaSub">Not calculated yet</span>
+    </div>
+  </div>
+  <div class="stat-chip">
+    <div class="stat-ring-mini">
+      <svg viewBox="0 0 64 64">
+        <circle class="ring-track" cx="32" cy="32" r="27"/>
+        <circle class="ring-progress ring-progress-gold" id="miniPercentRing" cx="32" cy="32" r="27" stroke-dasharray="169.6" stroke-dashoffset="169.6"/>
+      </svg>
+      <span class="stat-ring-value" id="miniPercentValue">—</span>
+    </div>
+    <div class="stat-chip-text">
+      <span class="stat-chip-label">Percentage</span>
+      <span class="stat-chip-sub" id="miniPercentSub">Not converted yet</span>
+    </div>
+  </div>
+  <div class="stat-chip stat-chip-count">
+    <div class="stat-count-icon">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+    </div>
+    <div class="stat-chip-text">
+      <span class="stat-chip-label" id="historyCountValue">0 entries</span>
+      <span class="stat-chip-sub">saved in history</span>
+    </div>
+  </div>
+</section>
+
+<div class="app-shell">
+
+  <nav class="tab-rail" role="tablist" aria-label="Calculator sections">
+    <div class="tab-rail-indicator" id="tabIndicator" aria-hidden="true"></div>
+    <button class="tab-btn" role="tab" id="tab-vtu" aria-controls="panel-vtu" aria-selected="false" data-panel="vtu">
+      <span class="tab-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></span>
+      <span class="tab-label">VTU Result Portal</span>
+    </button>
+    <button class="tab-btn" role="tab" id="tab-profile" aria-controls="panel-profile" aria-selected="false" data-panel="profile">
+      <span class="tab-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+      <span class="tab-label">Student Profile</span>
+    </button>
+    <button class="tab-btn is-active" role="tab" id="tab-sgpa" aria-controls="panel-sgpa" aria-selected="true" data-panel="sgpa">
+      <span class="tab-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>
+      <span class="tab-label">SGPA Calculator</span>
+    </button>
+    <button class="tab-btn" role="tab" id="tab-cgpa" aria-controls="panel-cgpa" aria-selected="false" data-panel="cgpa">
+      <span class="tab-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></span>
+      <span class="tab-label">CGPA Calculator</span>
+    </button>
+    <button class="tab-btn" role="tab" id="tab-percentage" aria-controls="panel-percentage" aria-selected="false" data-panel="percentage">
+      <span class="tab-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></span>
+      <span class="tab-label">Percentage Converter</span>
+    </button>
+    <button class="tab-btn" role="tab" id="tab-scale" aria-controls="panel-scale" aria-selected="false" data-panel="scale">
+      <span class="tab-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg></span>
+      <span class="tab-label">Grading Scale</span>
+    </button>
+    <button class="tab-btn" role="tab" id="tab-history" aria-controls="panel-history" aria-selected="false" data-panel="history">
+      <span class="tab-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg></span>
+      <span class="tab-label">History</span>
+    </button>
+  </nav>
+
+  <main class="content-area">
+
+    <!-- ============ VTU RESULT PORTAL PANEL ============ -->
+    <section id="panel-vtu" class="panel" role="tabpanel" aria-labelledby="tab-vtu" hidden>
+      <div class="panel-head">
+        <div>
+          <h2>VTU Result Portal & Marksheet Sync</h2>
+          <p class="panel-sub">Access live examination results from Visvesvaraya Technological University (VTU) and save verified marksheets directly into your student account.</p>
+        </div>
+      </div>
+
+      <!-- VTU Official Portal Direct Banner -->
+      <div class="vtu-banner-card">
+        <div class="vtu-banner-head">
+          <div class="vtu-official-badge">
+            <svg class="icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            Official University Portals
+          </div>
+          <h3>Visvesvaraya Technological University, Belagavi</h3>
+        </div>
+        <p class="vtu-banner-desc">Official VTU result servers require security verification. You can jump directly to live examination sessions, check your result, or paste/import your marksheet below to automatically tally SGPA, CGPA, and save it to your student profile.</p>
+        <div class="vtu-live-links-grid">
+          <a href="https://results.vtu.ac.in" target="_blank" rel="noopener noreferrer" class="btn-vtu-link">
+            <span>results.vtu.ac.in</span>
+            <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          </a>
+          <a href="https://results.vtu.ac.in/DJcbcs24/index.php" target="_blank" rel="noopener noreferrer" class="btn-vtu-link">
+            <span>Dec 2024 / Jan 2025 Results</span>
+            <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          </a>
+          <a href="https://results.vtu.ac.in/FMEcbcs24/index.php" target="_blank" rel="noopener noreferrer" class="btn-vtu-link">
+            <span>June / July 2024 Results</span>
+            <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <!-- Result Lookup & Import Card -->
+      <div class="vtu-lookup-box">
+        <div class="vtu-input-grid">
+          <div class="field">
+            <label for="vtuUsnInput">University Seat Number (USN)</label>
+            <input type="text" id="vtuUsnInput" placeholder="e.g. 1MS21CS089" maxlength="12" style="text-transform: uppercase;" />
+          </div>
+          <div class="field">
+            <label for="vtuBranchSelect">Branch / Program</label>
+            <select id="vtuBranchSelect">
+              <option value="CSE">Computer Science / ISE</option>
+              <option value="AIML">AI & Machine Learning / Data Science</option>
+              <option value="ECE">Electronics & Communication</option>
+              <option value="EEE">Electrical & Electronics</option>
+              <option value="MECH">Mechanical Engineering</option>
+              <option value="CIVIL">Civil Engineering</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="vtuSemesterSelect">Semester</label>
+            <select id="vtuSemesterSelect">
+              <option value="1">Semester 1 (P-Cycle)</option>
+              <option value="2">Semester 2 (C-Cycle)</option>
+              <option value="3">Semester 3</option>
+              <option value="4">Semester 4</option>
+              <option value="5" selected>Semester 5</option>
+              <option value="6">Semester 6</option>
+              <option value="7">Semester 7</option>
+              <option value="8">Semester 8</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="vtuExamSelect">Examination Session</label>
+            <select id="vtuExamSelect">
+              <option value="Dec2024/Jan2025">Dec 2024 / Jan 2025</option>
+              <option value="June/July2024">June / July 2024</option>
+              <option value="Dec2023/Jan2024">Dec 2023 / Jan 2024</option>
+              <option value="June/July2023">June / July 2023</option>
+            </select>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button id="vtuFetchBtn" class="btn btn-primary" title="Check / Import result">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+              Fetch / Import
+            </button>
+            <button id="vtuSampleBtn" class="btn btn-outline" title="Load sample verified VTU marksheet">
+              Sample Marksheet
+            </button>
+          </div>
+        </div>
+        <p id="vtuLookupError" class="field-error" role="alert" style="margin-top:12px;"></p>
+      </div>
+
+      <!-- Marksheet Display Card (Populated when result is fetched/loaded) -->
+      <div id="vtuResultCard" class="marksheet-card" hidden>
+        <div class="marksheet-header">
+          <div class="student-identity-bar">
+            <div>
+              <div class="identity-name" id="vtuResultStudentName">Student Name</div>
+              <div style="display:flex; gap:8px; align-items:center; margin-top:4px;">
+                <span class="identity-usn" id="vtuResultUsn">1MS21CS089</span>
+                <span class="scheme-pill" id="vtuResultScheme">2021 CBCS Scheme</span>
+                <span class="badge-status pass" id="vtuResultStatusBadge">ALL SUBJECTS PASSED</span>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+            <button id="vtuAddSubjectRowBtn" class="btn btn-outline btn-sm">+ Add Subject</button>
+            <button id="vtuSaveResultBtn" class="btn btn-primary">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
+              Save to Student Profile
+            </button>
+            <button id="vtuSendSgpaBtn" class="btn btn-outline">
+              Send to SGPA Calculator →
+            </button>
+          </div>
+        </div>
+
+        <div style="padding: 10px 24px 0 24px; font-size:0.78rem; color:var(--text-secondary); display:flex; justify-content:space-between; align-items:center;">
+          <span>💡 <strong>Tip:</strong> All marks and subject codes below are directly editable. SGPA, CGPA, and percentages auto-update live.</span>
+          <span id="vtuAutoSyncBadge" style="color:var(--forest); font-weight:600;"><svg class="icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg> Live CGPA & SGPA Auto-Sync Active</span>
+        </div>
+
+        <div style="overflow-x:auto;">
+          <table class="marksheet-table" id="vtuMarksheetTable">
+            <thead>
+              <tr>
+                <th>Subject Code</th>
+                <th>Subject Name</th>
+                <th class="num-cell">Credits</th>
+                <th class="num-cell">Internal (CIE / 50)</th>
+                <th class="num-cell">External (SEE / 50)</th>
+                <th class="num-cell">Total (100)</th>
+                <th class="num-cell">Grade</th>
+                <th class="num-cell">Grade Pts</th>
+                <th class="num-cell">Result</th>
+                <th class="num-cell"><span class="sr-only">Remove</span></th>
+              </tr>
+            </thead>
+                <th class="num-cell">Internal (CIE)</th>
+                <th class="num-cell">External (SEE)</th>
+                <th class="num-cell">Total (100)</th>
+                <th class="num-cell">Grade</th>
+                <th class="num-cell">Grade Pts</th>
+                <th class="num-cell">Result</th>
+              </tr>
+            </thead>
+            <tbody id="vtuMarksheetRows">
+              <!-- Injected by JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <div class="marksheet-footer">
+          <div class="marksheet-metrics">
+            <div class="metric-item">
+              <span class="metric-label">Semester Total Marks</span>
+              <span class="metric-value" id="vtuTotalMarksDisplay">0 / 0</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">Total Credits</span>
+              <span class="metric-value" id="vtuCreditsDisplay">0</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">Semester SGPA</span>
+              <span class="metric-value" id="vtuSgpaDisplay">0.00</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">VTU Percentage Formula</span>
+              <span class="metric-value" id="vtuPercentageDisplay">0.00%</span>
+              <button type="button" id="vtuConvertPercentBtn" class="btn btn-ghost btn-xs" style="margin-top:2px; font-size:0.75rem; text-decoration:underline; color:var(--gold-deep); padding:2px 4px; cursor:pointer;" title="Open in Percentage Converter">Convert / Explore →</button>
+            </div>
+          </div>
+          <button id="vtuPrintBtn" class="btn btn-ghost" title="Print this marksheet">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            Print Marksheet
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ STUDENT PROFILE & TRANSCRIPTS PANEL ============ -->
+    <section id="panel-profile" class="panel" role="tabpanel" aria-labelledby="tab-profile" hidden>
+      <div class="panel-head">
+        <div>
+          <h2>Student Profile & Academic Transcript</h2>
+          <p class="panel-sub">Manage your student credentials, track degree progress across all 8 semesters, and view saved VTU examination results.</p>
+        </div>
+        <div style="display:flex; gap:10px;">
+          <button id="profileEditBtn" class="btn btn-outline">Edit Profile</button>
+          <button id="profileSignOutBtn" class="btn btn-ghost btn-danger-text">Sign Out</button>
+        </div>
+      </div>
+
+      <!-- Profile Overview Card -->
+      <div class="profile-overview-card" id="profileOverviewCard">
+        <div class="profile-top-bar">
+          <div class="profile-avatar-large" id="profileLargeAvatar">NM</div>
+          <div class="profile-main-meta">
+            <h2 id="profileFullName">Nagendra M</h2>
+            <div class="profile-badges">
+              <span class="usn-pill" id="profileUsnBadge">1MS21CS089</span>
+              <span class="scheme-pill" id="profileSchemeBadge">2021 CBCS Scheme</span>
+              <span class="class-award-pill" id="profileClassBadge">First Class with Distinction</span>
+            </div>
+          </div>
+        </div>
+
+        <dl class="profile-details-grid">
+          <div class="profile-detail-cell">
+            <dt>Institution / College</dt>
+            <dd id="profileCollegeName">Ramaiah Institute of Technology</dd>
+          </div>
+          <div class="profile-detail-cell">
+            <dt>Branch / Department</dt>
+            <dd id="profileBranchName">Computer Science & Engineering</dd>
+          </div>
+          <div class="profile-detail-cell">
+            <dt>Cumulative CGPA</dt>
+            <dd id="profileCgpaVal" style="color:var(--gold-deep); font-size:1.1rem; font-family:var(--font-mono);">8.72</dd>
+          </div>
+          <div class="profile-detail-cell">
+            <dt>VTU Percentage Equivalent</dt>
+            <dd id="profilePercentVal" style="color:var(--gold-deep); font-size:1.1rem; font-family:var(--font-mono);">79.70%</dd>
+          </div>
+        </dl>
+
+        <div class="progress-section">
+          <div class="progress-header-labels">
+            <span>B.E / B.Tech Program Degree Progress</span>
+            <span id="degreeProgressLabel">5 of 8 Semesters Recorded (62.5%)</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" id="degreeProgressFill" style="width: 62.5%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Saved Semester Results Archive -->
+      <div class="transcripts-section">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+          <h3 style="font-family:var(--font-display); font-size:1.2rem; margin:0;">Saved Semester Marksheets</h3>
+          <span style="font-size:0.8rem; color:var(--text-secondary);" id="savedSemCountLabel">0 semesters saved</span>
+        </div>
+
+        <div id="savedTranscriptsContainer" class="transcripts-grid">
+          <!-- Injected by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SGPA PANEL ============ -->
+    <section id="panel-sgpa" class="panel is-active" role="tabpanel" aria-labelledby="tab-sgpa">
+      <div class="panel-head">
+        <div>
+          <h2>SGPA Calculator</h2>
+          <p class="panel-sub">Add every subject for one semester with its credit and grade. SGPA is the credit-weighted average of your grade points.</p>
+        </div>
+      </div>
+
+      <div class="card form-card">
+        <!-- Branch Syllabus Auto-fill Banner -->
+        <div class="autofill-banner" style="display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap; background:var(--surface-2); padding:14px 18px; border-radius:var(--radius-md); margin-bottom:18px; border:1px solid var(--border-soft);">
+          <div class="field" style="flex:1.4; min-width:190px; margin-bottom:0;">
+            <label for="sgpaBranchSelect" style="font-weight:600; display:flex; align-items:center; gap:6px;">
+              <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+              Auto-fill by Branch
+            </label>
+            <select id="sgpaBranchSelect">
+              <option value="CSE">Computer Science / Info Science (CSE / ISE)</option>
+              <option value="AIML">AI & Machine Learning / Data Science (AIML / AIDS)</option>
+              <option value="ECE">Electronics & Communication (ECE)</option>
+              <option value="EEE">Electrical & Electronics (EEE)</option>
+              <option value="MECH">Mechanical Engineering (MECH)</option>
+              <option value="CIVIL">Civil Engineering (CIVIL)</option>
+            </select>
+          </div>
+          <div class="field" style="flex:1; min-width:140px; margin-bottom:0;">
+            <label for="sgpaSemSelect" style="font-weight:600;">Semester</label>
+            <select id="sgpaSemSelect">
+              <option value="1">Semester 1 (P-Cycle)</option>
+              <option value="2">Semester 2 (C-Cycle)</option>
+              <option value="3">Semester 3</option>
+              <option value="4">Semester 4</option>
+              <option value="5" selected>Semester 5</option>
+              <option value="6">Semester 6</option>
+              <option value="7">Semester 7</option>
+              <option value="8">Semester 8</option>
+            </select>
+          </div>
+          <button type="button" id="sgpaAutofillBtn" class="btn btn-outline" style="white-space:nowrap; height:40px;">
+            <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            Auto-fill Subjects
+          </button>
+          <span style="font-size:0.75rem; color:var(--text-secondary); align-self:center;">Loaded subjects are 100% editable.</span>
+        </div>
+
+        <div class="field-row three-col" style="align-items: flex-end;">
+          <div class="field">
+            <label for="semesterName">Semester name</label>
+            <input type="text" id="semesterName" placeholder="e.g. Semester 3" maxlength="40" />
+          </div>
+          <div class="field">
+            <label for="gradeScaleActive">Grading scale</label>
+            <select id="gradeScaleActive"></select>
+          </div>
+          <div class="field">
+            <label>Subject score mode</label>
+            <div class="conversion-toggle score-mode-toggle" role="group" aria-label="Score input mode" style="margin-bottom:0;">
+              <button type="button" class="btn-segmented is-active" id="modeMarksBtn" data-mode="marks">Marks (0–100)</button>
+              <button type="button" class="btn-segmented" id="modeGradeBtn" data-mode="grade">Letter Grade</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="ledger">
+          <div class="ledger-margin" aria-hidden="true"></div>
+          <table class="ledger-table" id="subjectTable">
+            <thead>
+              <tr>
+                <th class="col-name">Subject</th>
+                <th class="col-credit">Credits</th>
+                <th class="col-grade" id="subjectColScoreHead">Marks (0–100)</th>
+                <th class="col-points">Grade pts</th>
+                <th class="col-action"><span class="sr-only">Remove</span></th>
+              </tr>
+            </thead>
+            <tbody id="subjectRows"><!-- rows injected by JS --></tbody>
+          </table>
+        </div>
+
+        <div class="form-actions">
+          <button id="addSubjectBtn" class="btn btn-outline">+ Add subject</button>
+          <div class="form-actions-right">
+            <button id="clearSgpaBtn" class="btn btn-ghost">Reset</button>
+            <button id="calcSgpaBtn" class="btn btn-primary"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="8" y2="10"/><line x1="12" y1="10" x2="12" y2="10"/><line x1="16" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="8" y2="18"/><line x1="12" y1="18" x2="12" y2="18"/><line x1="16" y1="18" x2="16" y2="18"/></svg>Calculate SGPA</button>
+          </div>
+        </div>
+        <p id="sgpaError" class="field-error" role="alert" aria-live="polite"></p>
+      </div>
+
+      <div class="result-card" id="sgpaResultCard" hidden>
+        <div class="result-top">
+          <div class="result-ring">
+            <svg viewBox="0 0 120 120">
+              <circle class="ring-track" cx="60" cy="60" r="52"/>
+              <circle class="ring-progress" id="sgpaRingProgress" cx="60" cy="60" r="52" stroke-dasharray="326.7" stroke-dashoffset="326.7"/>
+            </svg>
+            <div class="ring-center">
+              <span class="result-value" id="sgpaValue">0.00</span>
+              <span class="result-label">SGPA</span>
+            </div>
+          </div>
+          <dl class="result-meta">
+            <div><dt>Total credits</dt><dd id="sgpaTotalCredits">0</dd></div>
+            <div><dt>Subjects</dt><dd id="sgpaSubjectCount">0</dd></div>
+            <div><dt>Weighted points</dt><dd id="sgpaWeightedPoints">0.00</dd></div>
+          </dl>
+        </div>
+        <div class="result-actions">
+          <button id="saveSemesterBtn" class="btn btn-primary">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Save semester to history
+          </button>
+          <button id="sendToCgpaBtn" class="btn btn-outline">Send to CGPA calculator →</button>
+          <button id="sendSgpaToPercentBtn" class="btn btn-outline">Convert to percentage →</button>
+        </div>
+      </div>
+
+      <details class="how-it-works">
+        <summary>How is SGPA calculated?</summary>
+        <p><strong>SGPA = Σ(Credit × Grade Point) ÷ Σ(Credit)</strong> — every subject's grade point is weighted by its credit value, summed, then divided by the total credits for the semester.</p>
+        <p class="example">Example: a 4-credit subject graded A (9 points) contributes 36 quality points; a 3-credit subject graded B+ (7 points) contributes 21. SGPA = (36 + 21) ÷ (4 + 3) = 8.14.</p>
+      </details>
+    </section>
+
+    <!-- ============ CGPA PANEL ============ -->
+    <section id="panel-cgpa" class="panel" role="tabpanel" aria-labelledby="tab-cgpa" hidden>
+      <div class="panel-head">
+        <div>
+          <h2>CGPA Calculator</h2>
+          <p class="panel-sub">Combine every semester's SGPA and credit load into one cumulative average. Saved semesters load in automatically.</p>
+        </div>
+      </div>
+
+      <div class="card form-card">
+        <div class="ledger">
+          <div class="ledger-margin" aria-hidden="true"></div>
+          <table class="ledger-table" id="semesterTable">
+            <thead>
+              <tr>
+                <th class="col-name">Semester</th>
+                <th class="col-credit">Credits</th>
+                <th class="col-grade">SGPA</th>
+                <th class="col-points">Weighted</th>
+                <th class="col-action"><span class="sr-only">Remove</span></th>
+              </tr>
+            </thead>
+            <tbody id="semesterRows"><!-- rows injected by JS --></tbody>
+          </table>
+        </div>
+
+        <div class="form-actions">
+          <div class="form-actions-left" style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button id="addSemesterBtn" class="btn btn-outline">+ Add semester manually</button>
+            <button id="importSemestersBtn" class="btn btn-outline">↓ Import saved semesters</button>
+          </div>
+          <div class="form-actions-right">
+            <button id="clearCgpaBtn" class="btn btn-ghost">Reset</button>
+            <button id="calcCgpaBtn" class="btn btn-primary"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="8" y2="10"/><line x1="12" y1="10" x2="12" y2="10"/><line x1="16" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="8" y2="18"/><line x1="12" y1="18" x2="12" y2="18"/><line x1="16" y1="18" x2="16" y2="18"/></svg>Calculate CGPA</button>
+          </div>
+        </div>
+        <p id="cgpaError" class="field-error" role="alert" aria-live="polite"></p>
+      </div>
+
+      <div class="result-card" id="cgpaResultCard" hidden>
+        <div class="result-top">
+          <div class="result-ring">
+            <svg viewBox="0 0 120 120">
+              <circle class="ring-track" cx="60" cy="60" r="52"/>
+              <circle class="ring-progress ring-progress-alt" id="cgpaRingProgress" cx="60" cy="60" r="52" stroke-dasharray="326.7" stroke-dashoffset="326.7"/>
+            </svg>
+            <div class="ring-center">
+              <span class="result-value" id="cgpaValue">0.00</span>
+              <span class="result-label">CGPA</span>
+            </div>
+          </div>
+          <dl class="result-meta">
+            <div><dt>Total credits</dt><dd id="cgpaTotalCredits">0</dd></div>
+            <div><dt>Semesters</dt><dd id="cgpaSemesterCount">0</dd></div>
+            <div><dt>Weighted points</dt><dd id="cgpaWeightedPoints">0.00</dd></div>
+          </dl>
+        </div>
+        <div class="result-actions">
+          <button id="saveCgpaBtn" class="btn btn-primary">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Save snapshot to history
+          </button>
+          <button id="sendToPercentBtn" class="btn btn-outline">Convert to percentage →</button>
+        </div>
+      </div>
+
+      <details class="how-it-works">
+        <summary>How is CGPA calculated?</summary>
+        <p><strong>CGPA = Σ(Semester Credits × Semester SGPA) ÷ Σ(Semester Credits)</strong> — each semester's SGPA is weighted by that semester's total credits across your whole program so far.</p>
+        <p class="example">Example: Semester 1 — 20 credits at 8.00 SGPA; Semester 2 — 22 credits at 8.50 SGPA. CGPA = (20×8.00 + 22×8.50) ÷ (20+22) = 8.26.</p>
+      </details>
+    </section>
+
+    <!-- ============ PERCENTAGE PANEL ============ -->
+    <section id="panel-percentage" class="panel" role="tabpanel" aria-labelledby="tab-percentage" hidden>
+      <div class="panel-head">
+        <div>
+          <h2>Percentage & CGPA Converter</h2>
+          <p class="panel-sub">Convert CGPA/SGPA to percentage and vice versa. Universities differ on the exact conversion — pick a common formula or define your own.</p>
+        </div>
+      </div>
+
+      <div class="card form-card">
+        <div class="conversion-toggle" role="group" aria-label="Conversion direction">
+          <button type="button" class="btn-segmented is-active" id="dirCgpaToPercentBtn" data-direction="toPercent">CGPA / SGPA → Percentage</button>
+          <button type="button" class="btn-segmented" id="dirPercentToCgpaBtn" data-direction="toCgpa">Percentage → CGPA / SGPA</button>
+        </div>
+
+        <div class="field-row two-col" style="margin-top: 6px;">
+          <div class="field">
+            <label for="percentCgpaInput" id="percentInputLabel">CGPA (or SGPA) to convert</label>
+            <input type="number" id="percentCgpaInput" step="0.01" min="0" max="10" placeholder="e.g. 8.26" />
+          </div>
+          <div class="field">
+            <label for="formulaPreset">Conversion formula</label>
+            <select id="formulaPreset">
+              <option value="offset75" selected>VTU CBCS (Official) — Percentage = (CGPA − 0.75) × 10</option>
+              <option value="standard">Standard — Percentage = CGPA × 10</option>
+              <option value="aicte">AICTE / CBSE — Percentage = CGPA × 9.5</option>
+              <option value="offset25">Offset formula — Percentage = (CGPA − 0.25) × 10</option>
+              <option value="custom">Custom formula…</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="customFormulaFields" class="field-row two-col" hidden>
+          <div class="field">
+            <label for="customMultiplier" id="customMultiplierLabel">Multiplier</label>
+            <input type="number" id="customMultiplier" step="0.01" value="10" />
+          </div>
+          <div class="field">
+            <label for="customOffset" id="customOffsetLabel">Offset (subtracted before multiplying)</label>
+            <input type="number" id="customOffset" step="0.01" value="0" />
+          </div>
+        </div>
+
+        <div class="formula-display" id="formulaDisplay" aria-live="polite">
+          Percentage = CGPA × 10
+        </div>
+
+        <div class="form-actions">
+          <div class="form-actions-right" style="margin-left:auto;">
+            <button id="clearPercentBtn" class="btn btn-ghost">Reset</button>
+            <button id="calcPercentBtn" class="btn btn-primary"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></svg>Convert</button>
+          </div>
+        </div>
+        <p id="percentError" class="field-error" role="alert" aria-live="polite"></p>
+        <p class="hint">Formulas here are commonly cited examples, not guarantees — always confirm the exact rule in your university's official regulations.</p>
+      </div>
+
+      <div class="result-card" id="percentResultCard" hidden>
+        <div class="result-top">
+          <div class="result-ring">
+            <svg viewBox="0 0 120 120">
+              <circle class="ring-track" cx="60" cy="60" r="52"/>
+              <circle class="ring-progress ring-progress-gold" id="percentRingProgress" cx="60" cy="60" r="52" stroke-dasharray="326.7" stroke-dashoffset="326.7"/>
+            </svg>
+            <div class="ring-center">
+              <span class="result-value" id="percentValue">0.00<span class="unit">%</span></span>
+              <span class="result-label" id="percentResultLabel">Percentage</span>
+            </div>
+          </div>
+          <p class="formula-used" id="formulaUsedText"></p>
+        </div>
+        <div class="result-actions" id="percentResultActions" hidden>
+          <button id="sendConvertedToCgpaBtn" class="btn btn-outline">Send to CGPA calculator →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ GRADING SCALE PANEL ============ -->
+    <section id="panel-scale" class="panel" role="tabpanel" aria-labelledby="tab-scale" hidden>
+      <div class="panel-head">
+        <div>
+          <h2>Grading Scale</h2>
+          <p class="panel-sub">Edit grade letters and their point values to match your university's scheme. This scale feeds the grade dropdown in the SGPA calculator.</p>
+        </div>
+      </div>
+
+      <div class="card form-card">
+        <div class="field-row two-col">
+          <div class="field">
+            <label for="scaleSelector">Active scale</label>
+            <select id="scaleSelector"></select>
+          </div>
+          <div class="field">
+            <label for="newScaleName">Create new scale</label>
+            <div class="inline-add">
+              <input type="text" id="newScaleName" placeholder="e.g. My University 10-pt" maxlength="30" />
+              <button id="createScaleBtn" class="btn btn-outline">Create</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="ledger">
+          <div class="ledger-margin" aria-hidden="true"></div>
+          <table class="ledger-table" id="gradeScaleTable">
+            <thead>
+              <tr>
+                <th class="col-name">Grade</th>
+                <th class="col-credit">Min marks</th>
+                <th class="col-credit">Max marks</th>
+                <th class="col-points">Grade pts</th>
+                <th class="col-action"><span class="sr-only">Remove</span></th>
+              </tr>
+            </thead>
+            <tbody id="gradeScaleRows"><!-- rows injected by JS --></tbody>
+          </table>
+        </div>
+
+        <div class="form-actions">
+          <button id="addGradeRowBtn" class="btn btn-outline">+ Add grade</button>
+          <div class="form-actions-right">
+            <button id="deleteScaleBtn" class="btn btn-ghost btn-danger-text">Delete this scale</button>
+            <button id="saveScaleBtn" class="btn btn-primary">Save scale</button>
+          </div>
+        </div>
+        <p id="scaleError" class="field-error" role="alert" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <!-- ============ HISTORY PANEL ============ -->
+    <section id="panel-history" class="panel" role="tabpanel" aria-labelledby="tab-history" hidden>
+      <div class="panel-head">
+        <div>
+          <h2>Calculation History</h2>
+          <p class="panel-sub">Every saved semester and CGPA snapshot lives here, stored locally in this browser.</p>
+        </div>
+        <button id="clearHistoryBtn" class="btn btn-ghost btn-danger-text">Clear all history</button>
+      </div>
+
+      <div id="historyEmpty" class="empty-state">
+        <p>Nothing saved yet. Calculate an SGPA or CGPA and choose “Save to history” to see it here.</p>
+      </div>
+
+      <div id="historyList" class="history-list"><!-- entries injected by JS --></div>
+    </section>
+
+  </main>
+</div>
+
+<!-- Help dialog -->
+<dialog id="helpDialog">
+  <form method="dialog">
+    <div class="dialog-head">
+      <h2>How the numbers work</h2>
+      <button class="btn btn-ghost btn-icon" value="close" aria-label="Close">✕</button>
+    </div>
+  </form>
+  <div class="dialog-body">
+    <h3>SGPA — Semester Grade Point Average</h3>
+    <p>Multiply each subject's credit by its grade point, add those up, then divide by the total credits for that semester. It measures performance in a single term.</p>
+    <h3>CGPA — Cumulative Grade Point Average</h3>
+    <p>The same idea applied across every semester: each semester's SGPA is weighted by its credit total, summed across all semesters, then divided by the total credits earned so far.</p>
+    <h3>Percentage equivalent & vice versa</h3>
+    <p>Most universities publish a formula to translate between CGPA and percentage (such as CGPA × 10, CGPA × 9.5, or [CGPA − 0.75] × 10). This calculator works in both directions: CGPA/SGPA to percentage, and percentage to equivalent CGPA.</p>
+    <h3>Where is my data kept?</h3>
+    <p>Everything is calculated in your browser and saved to this device's local storage. Nothing is uploaded anywhere — clearing your browser data will also clear your saved history.</p>
+  </div>
+</dialog>
+
+<!-- Student Auth Dialog -->
+<dialog id="authDialog" class="auth-dialog">
+  <div class="auth-header">
+    <h2 style="font-family:var(--font-display); font-size:1.25rem; margin:0;" id="authModalTitle">Student Account</h2>
+    <button class="btn btn-ghost btn-icon" id="closeAuthDialogBtn" aria-label="Close">✕</button>
+  </div>
+  <div class="auth-tabs">
+    <button type="button" class="auth-tab-btn is-active" id="authTabSignIn">Sign In</button>
+    <button type="button" class="auth-tab-btn" id="authTabRegister">Create Account</button>
+  </div>
+  
+  <!-- Sign In Form -->
+  <form id="signInForm" class="auth-body">
+    <div class="field">
+      <label for="loginUsn">University Seat Number (USN)</label>
+      <input type="text" id="loginUsn" placeholder="e.g. 1MS21CS089" required style="text-transform:uppercase;" />
+    </div>
+    <div class="field">
+      <label for="loginPassword">Password / PIN</label>
+      <input type="password" id="loginPassword" placeholder="••••••••" required />
+    </div>
+    <p id="loginError" class="field-error" role="alert"></p>
+    <button type="submit" class="btn btn-primary" style="width:100%; margin-top:6px;">Sign In to Student Portal</button>
+    <button type="button" class="auth-demo-btn" id="demoStudentLoginBtn">⚡ Instant Demo Login (Nagendra M - 1MS21CS089)</button>
+  </form>
+
+  <!-- Register Form -->
+  <form id="registerForm" class="auth-body" hidden>
+    <div class="field">
+      <label for="regFullName">Full Name</label>
+      <input type="text" id="regFullName" placeholder="e.g. Nagendra M" required />
+    </div>
+    <div class="field">
+      <label for="regUsn">University Seat Number (USN)</label>
+      <input type="text" id="regUsn" placeholder="e.g. 1MS21CS089" required style="text-transform:uppercase;" />
+    </div>
+    <div class="field">
+      <label for="regCollege">College Name</label>
+      <input type="text" id="regCollege" placeholder="e.g. Ramaiah Institute of Technology" required />
+    </div>
+    <div class="field-row two-col" style="margin-top:0;">
+      <div class="field">
+        <label for="regBranch">Branch / Program</label>
+        <input type="text" id="regBranch" placeholder="e.g. Computer Science" required />
+      </div>
+      <div class="field">
+        <label for="regScheme">Academic Scheme</label>
+        <select id="regScheme">
+          <option value="2022 Scheme">2022 Scheme (NEP)</option>
+          <option value="2021 Scheme" selected>2021 Scheme (CBCS)</option>
+          <option value="2018 Scheme">2018 Scheme (CBCS)</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label for="regPassword">Create Password</label>
+      <input type="password" id="regPassword" placeholder="••••••••" required />
+    </div>
+    <p id="regError" class="field-error" role="alert"></p>
+    <button type="submit" class="btn btn-primary" style="width:100%; margin-top:6px;">Create Student Account</button>
+  </form>
+</dialog>
+
+<!-- Edit Profile Dialog -->
+<dialog id="editProfileDialog" class="auth-dialog">
+  <div class="auth-header">
+    <h2 style="font-family:var(--font-display); font-size:1.25rem; margin:0;">Edit Student Profile</h2>
+    <button class="btn btn-ghost btn-icon" id="closeEditProfileBtn" aria-label="Close">✕</button>
+  </div>
+  <form id="editProfileForm" class="auth-body">
+    <div class="field">
+      <label for="editFullName">Full Name</label>
+      <input type="text" id="editFullName" required />
+    </div>
+    <div class="field">
+      <label for="editUsn">University Seat Number (USN)</label>
+      <input type="text" id="editUsn" required style="text-transform:uppercase;" />
+    </div>
+    <div class="field">
+      <label for="editCollege">College / Institution</label>
+      <input type="text" id="editCollege" required />
+    </div>
+    <div class="field">
+      <label for="editBranch">Branch / Department</label>
+      <input type="text" id="editBranch" required />
+    </div>
+    <div class="field-row two-col" style="margin-top:0;">
+      <div class="field">
+        <label for="editScheme">Academic Scheme</label>
+        <select id="editScheme">
+          <option value="2022 Scheme">2022 Scheme</option>
+          <option value="2021 Scheme">2021 Scheme</option>
+          <option value="2018 Scheme">2018 Scheme</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="editCurrentSem">Current Semester</label>
+        <select id="editCurrentSem">
+          <option value="1">Semester 1</option>
+          <option value="2">Semester 2</option>
+          <option value="3">Semester 3</option>
+          <option value="4">Semester 4</option>
+          <option value="5">Semester 5</option>
+          <option value="6">Semester 6</option>
+          <option value="7">Semester 7</option>
+          <option value="8">Semester 8</option>
+        </select>
+      </div>
+    </div>
+    <button type="submit" class="btn btn-primary" style="width:100%; margin-top:6px;">Save Changes</button>
+  </form>
+</dialog>
+
+<div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+<!-- Templates -->
+<template id="subjectRowTemplate">
+  <tr class="ledger-row" data-row="subject">
+    <td class="col-name"><input type="text" class="subj-name" placeholder="Subject name" maxlength="60" /></td>
+    <td class="col-credit"><input type="number" class="subj-credit" min="0.5" max="30" step="0.5" placeholder="4" /></td>
+    <td class="col-grade">
+      <input type="number" class="subj-marks" min="0" max="100" step="0.5" placeholder="e.g. 85" />
+      <select class="subj-grade" hidden></select>
+    </td>
+    <td class="col-points"><span class="subj-points-display">—</span></td>
+    <td class="col-action"><button type="button" class="row-remove" title="Remove subject" aria-label="Remove subject">✕</button></td>
+  </tr>
+</template>
+
+<template id="semesterRowTemplate">
+  <tr class="ledger-row" data-row="semester">
+    <td class="col-name"><input type="text" class="sem-name" placeholder="Semester name" maxlength="40" /></td>
+    <td class="col-credit"><input type="number" class="sem-credit" min="0.5" max="80" step="0.5" placeholder="22" /></td>
+    <td class="col-grade"><input type="number" class="sem-sgpa" min="0" max="10" step="0.01" placeholder="8.50" /></td>
+    <td class="col-points"><span class="sem-weighted-display">—</span></td>
+    <td class="col-action"><button type="button" class="row-remove" title="Remove semester" aria-label="Remove semester">✕</button></td>
+  </tr>
+</template>
+
+<template id="gradeRowTemplate">
+  <tr class="ledger-row" data-row="grade">
+    <td class="col-name"><input type="text" class="grade-letter" placeholder="A+" maxlength="6" /></td>
+    <td class="col-credit"><input type="number" class="grade-min" min="0" max="100" step="1" placeholder="80" /></td>
+    <td class="col-credit"><input type="number" class="grade-max" min="0" max="100" step="1" placeholder="89" /></td>
+    <td class="col-points"><input type="number" class="grade-point" min="0" max="10" step="0.1" placeholder="9" /></td>
+    <td class="col-action"><button type="button" class="row-remove" title="Remove grade" aria-label="Remove grade">✕</button></td>
+  </tr>
+</template>
+
+<script src="script.js"></script>
+</body>
+</html>
